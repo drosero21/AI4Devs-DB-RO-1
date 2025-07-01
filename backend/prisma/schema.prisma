@@ -14,44 +14,156 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Company {
+  id        Int        @id @default(autoincrement())
+  name      String
+  employees Employee[]
+  positions Position[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Employee {
+  id         Int      @id @default(autoincrement())
+  company    Company  @relation(fields: [companyId], references: [id])
+  companyId  Int
+  name       String
+  email      String   @unique
+  role       String?
+  is_active  Boolean  @default(true)
+  interviews Interview[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model InterviewFlow {
+  id            Int            @id @default(autoincrement())
+  description   String?
+  positions     Position[]
+  interviewSteps InterviewStep[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Position {
+  id                  Int            @id @default(autoincrement())
+  company             Company        @relation(fields: [companyId], references: [id])
+  companyId           Int
+  interviewFlow       InterviewFlow? @relation(fields: [interviewFlowId], references: [id])
+  interviewFlowId     Int?
+  title               String
+  description         String?
+  status              String?
+  is_visible          Boolean        @default(true)
+  location            String?
+  job_description     String?
+  requirements        String?
+  responsibilities    String?
+  salary_min          Float?
+  salary_max          Float?
+  employment_type     String?
+  benefits            String?
+  company_description String?
+  application_deadline DateTime?
+  contact_info        String?
+  applications        Application[]
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model InterviewType {
+  id          Int            @id @default(autoincrement())
+  name        String
+  description String?
+  interviewSteps InterviewStep[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model InterviewStep {
+  id               Int            @id @default(autoincrement())
+  interviewFlow    InterviewFlow  @relation(fields: [interviewFlowId], references: [id])
+  interviewFlowId  Int
+  interviewType    InterviewType  @relation(fields: [interviewTypeId], references: [id])
+  interviewTypeId  Int
+  name             String
+  order_index      Int?
+  interviews       Interview[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
 model Candidate {
-  id                Int               @id @default(autoincrement())
-  firstName         String            @db.VarChar(100)
-  lastName          String            @db.VarChar(100)
-  email             String            @unique @db.VarChar(255)
-  phone             String?           @db.VarChar(15)
-  address           String?           @db.VarChar(100)
-  educations        Education[]
-  workExperiences   WorkExperience[]
-  resumes           Resume[]
+  id              Int              @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  email           String           @unique
+  phone           String?
+  address         String?
+  educations      Education[]
+  workExperiences WorkExperience[]
+  resumes         Resume[]
+  applications    Application[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Application {
+  id              Int         @id @default(autoincrement())
+  position        Position    @relation(fields: [positionId], references: [id])
+  positionId      Int
+  candidate       Candidate   @relation(fields: [candidateId], references: [id])
+  candidateId     Int
+  application_date DateTime?
+  status          String?
+  notes           String?
+  interviews      Interview[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Interview {
+  id              Int           @id @default(autoincrement())
+  application     Application   @relation(fields: [applicationId], references: [id])
+  applicationId   Int
+  interviewStep   InterviewStep @relation(fields: [interviewStepId], references: [id])
+  interviewStepId Int
+  employee        Employee?     @relation(fields: [employeeId], references: [id])
+  employeeId      Int?
+  interview_date  DateTime?
+  result          String?
+  score           Int?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model Education {
   id            Int       @id @default(autoincrement())
-  institution   String    @db.VarChar(100)
-  title         String    @db.VarChar(250)
+  institution   String
+  title         String
   startDate     DateTime
   endDate       DateTime?
-  candidateId   Int
   candidate     Candidate @relation(fields: [candidateId], references: [id])
+  candidateId   Int
 }
 
 model WorkExperience {
   id          Int       @id @default(autoincrement())
-  company     String    @db.VarChar(100)
-  position    String    @db.VarChar(100)
-  description String?   @db.VarChar(200)
+  company     String
+  position    String
+  description String?
   startDate   DateTime
   endDate     DateTime?
-  candidateId Int
   candidate   Candidate @relation(fields: [candidateId], references: [id])
+  candidateId Int
 }
 
 model Resume {
   id          Int       @id @default(autoincrement())
-  filePath    String    @db.VarChar(500)
-  fileType    String    @db.VarChar(50)
+  filePath    String
+  fileType    String
   uploadDate  DateTime
-  candidateId Int
   candidate   Candidate @relation(fields: [candidateId], references: [id])
+  candidateId Int
 }
